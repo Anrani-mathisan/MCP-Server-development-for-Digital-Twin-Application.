@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Room A1 - Digital Twin Dashboard</title>
+    <!-- Outfit Font from Google Fonts for Premium Visuals -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #080d19;
+            --card-bg: rgba(19, 26, 48, 0.65);
+            --card-border: rgba(255, 255, 255, 0.06);
+            --text-main: #f8fafc;
+            --text-mute: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-orange: #f97316;
+            --accent-green: #10b981;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* Premium Glassmorphic Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        .metric-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-mute);
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 8px 0;
+        }
+
+        /* Progress Bar Guages */
+        .progress-track {
+            background: rgba(255, 255, 255, 0.06);
+            height: 6px;
+            border-radius: 999px;
+            overflow: hidden;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fill-temp {
+            background: linear-gradient(90deg, #06b6d4, #3b82f6);
+        }
+
+        .fill-humidity {
+            background: #2563eb;
+        }
+
+        .fill-aqi {
+            background: linear-gradient(90deg, #eab308, #f97316);
+        }
+
+        .fill-occupancy {
+            background: #10b981;
+        }
+
+        /* Live Badge with Pulse */
+        .live-badge {
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            padding: 6px 14px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+            }
+        }
+
+        /* Buttons Styling matching Screenshot */
+        .btn-pad-warning {
+            color: #eab308;
+            background: transparent;
+            border: 1px solid rgba(234, 179, 8, 0.4);
+            transition: all 0.25s ease;
+        }
+
+        .btn-pad-warning:hover {
+            color: #ffffff;
+            background: #eab308;
+            border-color: #eab308;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
+        }
+
+        .btn-pad-danger {
+            color: #ef4444;
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            transition: all 0.25s ease;
+        }
+
+        .btn-pad-danger:hover {
+            color: #ffffff;
+            background: #ef4444;
+            border-color: #ef4444;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-pad-info {
+            color: #06b6d4;
+            background: transparent;
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            transition: all 0.25s ease;
+        }
+
+        .btn-pad-info:hover {
+            color: #ffffff;
+            background: #06b6d4;
+            border-color: #06b6d4;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-pad-neutral {
+            color: #f8fafc;
+            background: #475569;
+            border: 1px solid #64748b;
+            transition: all 0.25s ease;
+        }
+
+        .btn-pad-neutral:hover {
+            background: #64748b;
+            box-shadow: 0 0 15px rgba(100, 116, 139, 0.3);
+        }
+
+        /* Actuator Capsule Badges */
+        .badge-capsule {
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 6px 18px;
+            border-radius: 999px;
+            border: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .badge-cyan {
+            background-color: #06b6d4;
+            color: #080d19;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+        }
+
+        .badge-blue {
+            background-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.25);
+        }
+
+        .log-display-window {
+            background: rgba(8, 13, 25, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            min-height: 120px;
+            max-height: 160px;
+            overflow-y: auto;
+            padding: 12px 16px;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 99px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-4 px-xl-5">
+
+        <!-- Header -->
+        <div class="row align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+            <div class="col-8 col-sm-6">
+                <h1 class="h2 fw-bold mb-1" id="room-name">Smart Lab Room A1</h1>
+                <p class="mb-0 text-muted" id="room-location">Building 3, Floor 2</p>
+            </div>
+            <div class="col-4 col-sm-6 text-end">
+                <div class="live-badge">
+                    <span class="pulse-dot"></span> LIVE CONNECTION
+                </div>
+                <div class="text-muted small mt-2" id="last-updated">Last Checked: Loading...</div>
+            </div>
+        </div>
+
+        <!-- Automation Banner -->
+        <div id="automation-zone" class="alert alert-info text-center p-3 mb-4 rounded-3 fw-bold text-dark border-0"
+            style="display: none; background: linear-gradient(90deg, #06b6d4, #3b82f6); color: #080d19 !important; box-shadow: 0 4px 20px rgba(6, 182, 212, 0.3);">
+        </div>
+
+        <div class="row g-4">
+
+            <!-- Left Side: Live Telemetry Grid -->
+            <div class="col-lg-8">
+                <h3 class="h6 mb-3 text-uppercase fw-semibold tracking-wider text-muted">Environmental Live Sensors</h3>
+
+                <div class="row g-3 mb-4">
+                    <!-- Temp Card -->
+                    <div class="col-md-6">
+                        <div class="glass-card p-4">
+                            <div class="metric-title text-uppercase">Temperature</div>
+                            <div class="metric-value" id="temp-val">--</div>
+                            <div class="progress-track">
+                                <div class="progress-fill fill-temp" id="temp-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Humidity Card -->
+                    <div class="col-md-6">
+                        <div class="glass-card p-4">
+                            <div class="metric-title text-uppercase">Humidity</div>
+                            <div class="metric-value" id="humidity-val">--</div>
+                            <div class="progress-track">
+                                <div class="progress-fill fill-humidity" id="humidity-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AQI Card -->
+                    <div class="col-md-6">
+                        <div class="glass-card p-4">
+                            <div class="metric-title text-uppercase">Air Quality</div>
+                            <div class="metric-value" id="aqi-val">--</div>
+                            <div class="progress-track">
+                                <div class="progress-fill fill-aqi" id="aqi-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Occupancy Card -->
+                    <div class="col-md-6">
+                        <div class="glass-card p-4">
+                            <div class="metric-title text-uppercase">Room Occupancy</div>
+                            <div class="metric-value" id="occ-val">--</div>
+                            <div class="progress-track">
+                                <div class="progress-fill fill-occupancy" id="occ-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Traceable Telemetry Log -->
+                <div class="glass-card p-4 mb-4">
+                    <div class="metric-title text-uppercase mb-3">System Telemetry Log (Traceable):</div>
+                    <div class="log-display-window">
+                        <pre class="font-monospace text-info small mb-0" id="log-display"
+                            style="white-space: pre-wrap; word-break: break-all;">Awaiting gateway sync...</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Control Dashboard & Overrides -->
+            <div class="col-lg-4 d-flex flex-column gap-4">
+
+                <!-- Trigger Pad Card -->
+                <div>
+                    <h3 class="h6 mb-3 text-uppercase fw-semibold tracking-wider text-muted">Simulation Trigger Pad</h3>
+                    <div class="glass-card p-4 d-flex flex-column gap-3">
+                        <p class="small text-muted mb-1">Inject extreme structural stressors into your server
+                            environment:</p>
+
+                        <button class="btn btn-pad-warning w-100 py-2 fw-bold rounded-3"
+                            onclick="runScenario('crowded')">
+                            ⚠️ Simulate Crowded Profile
+                        </button>
+
+                        <button class="btn btn-pad-danger w-100 py-2 fw-bold rounded-3"
+                            onclick="runScenario('fire_drill')">
+                            🔥 Trigger Fire Drill
+                        </button>
+
+                        <button class="btn btn-pad-info w-100 py-2 fw-bold rounded-3"
+                            onclick="runScenario('midnight_eco')">
+                            🌙 Activate Midnight Eco Mode
+                        </button>
+
+                        <button class="btn btn-pad-neutral w-100 py-2 fw-bold rounded-3"
+                            onclick="runScenario('normal')">
+                            🔄 Reset Room Defaults
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Actuator Hardware Overrides Card -->
+                <div>
+                    <h3 class="h6 mb-3 text-uppercase fw-semibold tracking-wider text-muted">Actuator Hardware Overrides
+                    </h3>
+                    <div class="glass-card p-4 d-flex flex-column gap-4">
+
+                        <!-- HVAC Subsystem -->
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="fw-bold mb-1">HVAC Subsystem</div>
+                                <div class="small text-muted" id="hvac-status">Status: ...</div>
+                            </div>
+                            <div>
+                                <span class="badge-capsule badge-cyan">ON</span>
+                            </div>
+                        </div>
+
+                        <!-- Ventilation Fans -->
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="fw-bold mb-1">Ventilation Fans</div>
+                                <div class="small text-muted" id="vent-status">Speed: ...</div>
+                            </div>
+                            <div>
+                                <span class="badge-capsule badge-blue">MAX</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function updateDashboard() {
+            try {
+                const res = await fetch('/api/state');
+                if (!res.ok) throw new Error('API fetch failed');
+
+                const data = await res.json();
+
+                // Dynamic Header Info
+                document.getElementById('room-name').innerText = data.room_name;
+                document.getElementById('room-location').innerText = data.location;
+
+                // Update Metrics Values
+                document.getElementById('temp-val').innerText = `${data.sensors.temperature.value.toFixed(1)} °C`;
+                document.getElementById('humidity-val').innerText = `${data.sensors.humidity.value.toFixed(1)} %`;
+                document.getElementById('aqi-val').innerText = `${data.sensors.air_quality.value.toFixed(1)} AQI`;
+                document.getElementById('occ-val').innerText = `${Math.round(data.sensors.occupancy.value)} / 50`;
+
+                // Update Progress Telemetry Sliders
+                // Temperature: range 15 to 40
+                const tPercent = Math.max(0, Math.min(100, ((data.sensors.temperature.value - 15) / (40 - 15)) * 100));
+                document.getElementById('temp-progress').style.width = `${tPercent}%`;
+
+                // Humidity: range 10 to 90
+                const hPercent = Math.max(0, Math.min(100, ((data.sensors.humidity.value - 10) / (90 - 10)) * 100));
+                document.getElementById('humidity-progress').style.width = `${hPercent}%`;
+
+                // Air Quality: range 0 to 300
+                const aqPercent = Math.max(0, Math.min(100, (data.sensors.air_quality.value / 300) * 100));
+                document.getElementById('aqi-progress').style.width = `${aqPercent}%`;
+
+                // Occupancy: range 0 to 50
+                const occPercent = Math.max(0, Math.min(100, (data.sensors.occupancy.value / 50) * 100));
+                document.getElementById('occ-progress').style.width = `${occPercent}%`;
+
+                // Update Logs (Latest 10 entries from history)
+                if (data.history && data.history.length > 0) {
+                    const logs = data.history.slice(-10).reverse().map(l => {
+                        const time = l.timestamp.includes('T') ? l.timestamp.split('T')[1].split('.')[0] : l.timestamp;
+                        return `[${time}] ${l.description}`;
+                    }).join('\n');
+                    document.getElementById('log-display').innerText = logs;
+                } else {
+                    document.getElementById('log-display').innerText = "Awaiting gateway sync...";
+                }
+
+                // Automation Banner
+                const autoZone = document.getElementById('automation-zone');
+                if (data.automation_active && data.automation_message) {
+                    autoZone.innerText = data.automation_message;
+                    autoZone.style.display = 'block';
+                } else {
+                    autoZone.style.display = 'none';
+                }
+
+                // Update Hardware Overrides Statuses
+                document.getElementById('hvac-status').innerText = `Status: ${data.actuators.hvac.status} (${data.actuators.hvac.mode})`;
+
+                // Capitalize ventilation speed
+                const vSpeed = data.actuators.ventilation.speed;
+                const vSpeedFormatted = vSpeed.charAt(0).toUpperCase() + vSpeed.slice(1);
+                document.getElementById('vent-status').innerText = `Speed: ${vSpeedFormatted}`;
+
+                // Update Last Checked Time
+                const now = new Date();
+                let hours = now.getHours();
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const ampm = hours >= 12 ? 'pm' : 'am';
+                hours = hours % 12;
+                hours = hours ? hours : 12; // standard 12-hour formatting
+                document.getElementById('last-updated').innerText = `Last Checked: ${hours}:${minutes}:${seconds} ${ampm}`;
+
+            } catch (err) {
+                console.error('Error fetching digital twin state:', err);
+            }
+        }
+
+        async function runScenario(name) {
+            try {
+                await fetch('/api/scenario', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenario: name })
+                });
+                updateDashboard();
+            } catch (err) {
+                console.error('Error running scenario:', err);
+            }
+        }
+
+        // Live updating loop
+        setInterval(updateDashboard, 1000);
+        updateDashboard();
+    </script>
+</body>
+
+</html>
